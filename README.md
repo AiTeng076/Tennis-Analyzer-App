@@ -29,7 +29,7 @@ This app turns the original console-based tracker into a graphical desktop appli
 7. If the current game is a tiebreak, tick `Current game is a tiebreak`. The current game score will be set to `6 - 6`, and the tiebreak point fields will become available.
 8. Start the match.
 9. During the match, type a rally string and press `Submit`.
-10. Use `Delete Last` to undo the previous rally.
+10. Use `Delete Last` to undo the previous rally. Warning: delete only works once for the most recent rally; after deleting, enter a new rally before deleting again.
 11. Use `Show Stats` to view player statistics at any time.
 
 If the full setup screen is not visible and you cannot see the `Start Match` button, double-click the title bar at the top of the app window to resize/maximize it. You can also drag the window edges to make the setup screen taller.
@@ -75,7 +75,7 @@ Examples:
 - `1!2bf!` means first serve missed, second serve in, returner backhand, server forehand unforced error.
 - `1fdv*` means first serve in, returner forehand, server drop shot, returner volley winner.
 
-You can also type `stats` in the rally box to show stats, or `delete` to undo the previous rally.
+You can also type `stats` in the rally box to show stats, or `delete` to undo the previous rally. Delete only works once for the most recent rally.
 
 ## Run Locally
 

@@ -41,6 +41,7 @@ public class Match {
     private int lastTiebreakLoserPoints = -1;
 
     private boolean gameOver;
+    private boolean canDeleteLastRally;
 
     private final ArrayList<Rally> rallies = new ArrayList<>();
     private final ArrayList<String> setResults = new ArrayList<>();
@@ -115,6 +116,7 @@ public class Match {
         Rally rally = Rally.parse(trimmed, server, returner);
         snapshotBeforePoint();
         rallies.add(rally);
+        canDeleteLastRally = true;
 
         if (isPressurePoint()) {
             server.recordPressureServe(rally.firstServe);
@@ -271,8 +273,12 @@ public class Match {
         if (rallies.isEmpty()) {
             return MatchUpdate.error("There is no rally to delete.");
         }
+        if (!canDeleteLastRally) {
+            return MatchUpdate.error("Delete only works once for the most recent rally. Enter a new rally before deleting again.");
+        }
 
         Rally last = rallies.remove(rallies.size() - 1);
+        canDeleteLastRally = false;
 
         serverPoints = serverPointsBefore;
         returnerPoints = returnerPointsBefore;
