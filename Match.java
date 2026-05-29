@@ -32,6 +32,7 @@ public class Match {
 
     private int player1Sets = 0;
     private int player2Sets = 0;
+    private int setsToWin = 2;
 
     private boolean inTiebreak = false;
     private int tiebreakPlayer1Points = 0;
@@ -52,10 +53,13 @@ public class Match {
     }
 
     public void setInitialState(MatchSetup setup) {
+        setsToWin = setup.setsToWin;
         player1Sets = setup.player1Sets;
         player2Sets = setup.player2Sets;
         player1Games = setup.player1Games;
         player2Games = setup.player2Games;
+        setResults.clear();
+        setResults.addAll(setup.completedSetResults);
 
         if (setup.startingServerIsPlayerOne) {
             server = player1;
@@ -65,7 +69,7 @@ public class Match {
             returner = player1;
         }
 
-        if (player1Games == 6 && player2Games == 6) {
+        if (setup.startInTiebreak) {
             inTiebreak = true;
             tiebreakPlayer1Points = setup.tiebreakPlayer1Points;
             tiebreakPlayer2Points = setup.tiebreakPlayer2Points;
@@ -168,10 +172,9 @@ public class Match {
             tiebreakPlayer2Points++;
         }
 
-        events.add("Tiebreak: " + tiebreakPlayer1Points + " - " + tiebreakPlayer2Points
-                + " | Server: " + server.getName());
-
         updateTiebreakServer();
+
+        events.add("Tiebreak: " + formatTiebreakScore() + " | Server: " + server.getName());
 
         if ((tiebreakPlayer1Points >= 7 || tiebreakPlayer2Points >= 7)
                 && Math.abs(tiebreakPlayer1Points - tiebreakPlayer2Points) >= 2) {
@@ -197,6 +200,7 @@ public class Match {
             tiebreakPlayer1Points = 0;
             tiebreakPlayer2Points = 0;
             inTiebreak = false;
+            resetCurrentGamePoints();
 
             server = returner;
             returner = server.equals(player1) ? player2 : player1;
@@ -232,6 +236,7 @@ public class Match {
             tiebreakPlayer1Points = 0;
             tiebreakPlayer2Points = 0;
             tiebreakStartingServer = server;
+            resetCurrentGamePoints();
             events.add("Tiebreak started.");
         } else if (player1Games >= 6 && player1Games - player2Games >= 2) {
             player1Sets++;
@@ -240,6 +245,7 @@ public class Match {
             events.add("Set ended: " + setScore);
             player1Games = 0;
             player2Games = 0;
+            resetCurrentGamePoints();
             server = returner;
             returner = server.equals(player1) ? player2 : player1;
             events.add("New set. Starting server: " + server.getName());
@@ -250,6 +256,7 @@ public class Match {
             events.add("Set ended: " + setScore);
             player1Games = 0;
             player2Games = 0;
+            resetCurrentGamePoints();
             server = returner;
             returner = server.equals(player1) ? player2 : player1;
             events.add("New set. Starting server: " + server.getName());
@@ -342,6 +349,10 @@ public class Match {
         Player temp = server;
         server = returner;
         returner = temp;
+        resetCurrentGamePoints();
+    }
+
+    private void resetCurrentGamePoints() {
         serverPoints = 0;
         returnerPoints = 0;
         gameOver = false;
@@ -349,7 +360,7 @@ public class Match {
 
     public String getCurrentPointScore() {
         if (inTiebreak) {
-            return tiebreakPlayer1Points + " - " + tiebreakPlayer2Points;
+            return formatTiebreakScore();
         }
         if (serverPoints >= 3 && returnerPoints >= 3) {
             if (serverPoints == returnerPoints) {
@@ -363,6 +374,11 @@ public class Match {
             }
         }
         return getScore(serverPoints) + " - " + getScore(returnerPoints);
+    }
+
+    private String formatTiebreakScore() {
+        return player1.getName() + " " + tiebreakPlayer1Points
+                + " - " + player2.getName() + " " + tiebreakPlayer2Points;
     }
 
     private String getScore(int points) {
@@ -416,14 +432,14 @@ public class Match {
     }
 
     public boolean isMatchOver() {
-        return player1Sets == 2 || player2Sets == 2;
+        return player1Sets == setsToWin || player2Sets == setsToWin;
     }
 
     public Player getWinner() {
         if (!isMatchOver()) {
             return null;
         }
-        return player1Sets == 2 ? player1 : player2;
+        return player1Sets == setsToWin ? player1 : player2;
     }
 
     public String buildFinalSummary() {

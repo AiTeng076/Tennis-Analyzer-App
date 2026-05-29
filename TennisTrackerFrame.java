@@ -21,6 +21,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class TennisTrackerFrame extends JFrame {
     private final CardLayout cards = new CardLayout();
@@ -29,13 +31,23 @@ public class TennisTrackerFrame extends JFrame {
     private final JTextField player1Field = new JTextField("Player 1", 16);
     private final JTextField player2Field = new JTextField("Player 2", 16);
     private final JComboBox<String> startingServerBox = new JComboBox<>();
+    private final JComboBox<Integer> setsToWinBox = new JComboBox<>(new Integer[]{2, 3});
     private final JCheckBox useStartingScoreCheck = new JCheckBox("Resume from an existing score");
     private final JTextField player1SetsField = new JTextField("0", 4);
     private final JTextField player2SetsField = new JTextField("0", 4);
+    private final JTextField set1Player1GamesField = new JTextField("0", 4);
+    private final JTextField set1Player2GamesField = new JTextField("0", 4);
+    private final JTextField set2Player1GamesField = new JTextField("0", 4);
+    private final JTextField set2Player2GamesField = new JTextField("0", 4);
+    private final JTextField set3Player1GamesField = new JTextField("0", 4);
+    private final JTextField set3Player2GamesField = new JTextField("0", 4);
+    private final JTextField set4Player1GamesField = new JTextField("0", 4);
+    private final JTextField set4Player2GamesField = new JTextField("0", 4);
     private final JTextField player1GamesField = new JTextField("0", 4);
     private final JTextField player2GamesField = new JTextField("0", 4);
     private final JComboBox<Integer> serverPointsBox = new JComboBox<>(new Integer[]{0, 15, 30, 40});
     private final JComboBox<Integer> returnerPointsBox = new JComboBox<>(new Integer[]{0, 15, 30, 40});
+    private final JCheckBox startInTiebreakCheck = new JCheckBox("Current game is a tiebreak");
     private final JTextField tiebreakPlayer1Field = new JTextField("0", 4);
     private final JTextField tiebreakPlayer2Field = new JTextField("0", 4);
 
@@ -106,6 +118,12 @@ public class TennisTrackerFrame extends JFrame {
 
         gbc.gridx = 0;
         gbc.gridy++;
+        panel.add(new JLabel("Sets to win match"), gbc);
+        gbc.gridx = 1;
+        panel.add(setsToWinBox, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
         gbc.gridwidth = 2;
         panel.add(useStartingScoreCheck, gbc);
 
@@ -121,6 +139,30 @@ public class TennisTrackerFrame extends JFrame {
         panel.add(new JLabel("Player 2 sets"), gbc);
         gbc.gridx = 1;
         panel.add(player2SetsField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Completed set 1 games"), gbc);
+        gbc.gridx = 1;
+        panel.add(buildGameScorePanel(set1Player1GamesField, set1Player2GamesField), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Completed set 2 games"), gbc);
+        gbc.gridx = 1;
+        panel.add(buildGameScorePanel(set2Player1GamesField, set2Player2GamesField), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Completed set 3 games"), gbc);
+        gbc.gridx = 1;
+        panel.add(buildGameScorePanel(set3Player1GamesField, set3Player2GamesField), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Completed set 4 games"), gbc);
+        gbc.gridx = 1;
+        panel.add(buildGameScorePanel(set4Player1GamesField, set4Player2GamesField), gbc);
 
         gbc.gridx = 0;
         gbc.gridy++;
@@ -148,6 +190,12 @@ public class TennisTrackerFrame extends JFrame {
 
         gbc.gridx = 0;
         gbc.gridy++;
+        gbc.gridwidth = 2;
+        panel.add(startInTiebreakCheck, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridx = 0;
+        gbc.gridy++;
         panel.add(new JLabel("Tiebreak points Player 1"), gbc);
         gbc.gridx = 1;
         panel.add(tiebreakPlayer1Field, gbc);
@@ -167,6 +215,37 @@ public class TennisTrackerFrame extends JFrame {
         panel.add(startButton, gbc);
 
         useStartingScoreCheck.addActionListener(e -> updateStartingScoreFields());
+        setsToWinBox.addActionListener(e -> updateStartingScoreFields());
+        startInTiebreakCheck.addActionListener(e -> {
+            if (startInTiebreakCheck.isSelected()) {
+                player1GamesField.setText("6");
+                player2GamesField.setText("6");
+            }
+            updateStartingScoreFields();
+        });
+        DocumentListener scoreListener = new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                updateStartingScoreFields();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                updateStartingScoreFields();
+            }
+
+            public void changedUpdate(DocumentEvent e) {
+                updateStartingScoreFields();
+            }
+        };
+        player1SetsField.getDocument().addDocumentListener(scoreListener);
+        player2SetsField.getDocument().addDocumentListener(scoreListener);
+        return panel;
+    }
+
+    private JPanel buildGameScorePanel(JTextField player1GamesField, JTextField player2GamesField) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        panel.add(player1GamesField);
+        panel.add(new JLabel("-"));
+        panel.add(player2GamesField);
         return panel;
     }
 
@@ -234,14 +313,42 @@ public class TennisTrackerFrame extends JFrame {
 
     private void updateStartingScoreFields() {
         boolean enabled = useStartingScoreCheck.isSelected();
+        int completedSets = enabled ? getEnteredCompletedSets() : 0;
+        boolean tiebreakEnabled = enabled && startInTiebreakCheck.isSelected();
+        if (tiebreakEnabled) {
+            player1GamesField.setText("6");
+            player2GamesField.setText("6");
+        }
         player1SetsField.setEnabled(enabled);
         player2SetsField.setEnabled(enabled);
-        player1GamesField.setEnabled(enabled);
-        player2GamesField.setEnabled(enabled);
-        serverPointsBox.setEnabled(enabled);
-        returnerPointsBox.setEnabled(enabled);
-        tiebreakPlayer1Field.setEnabled(enabled);
-        tiebreakPlayer2Field.setEnabled(enabled);
+        set1Player1GamesField.setEnabled(completedSets >= 1);
+        set1Player2GamesField.setEnabled(completedSets >= 1);
+        set2Player1GamesField.setEnabled(completedSets >= 2);
+        set2Player2GamesField.setEnabled(completedSets >= 2);
+        set3Player1GamesField.setEnabled(completedSets >= 3);
+        set3Player2GamesField.setEnabled(completedSets >= 3);
+        set4Player1GamesField.setEnabled(completedSets >= 4);
+        set4Player2GamesField.setEnabled(completedSets >= 4);
+        player1GamesField.setEnabled(enabled && !tiebreakEnabled);
+        player2GamesField.setEnabled(enabled && !tiebreakEnabled);
+        serverPointsBox.setEnabled(enabled && !tiebreakEnabled);
+        returnerPointsBox.setEnabled(enabled && !tiebreakEnabled);
+        startInTiebreakCheck.setEnabled(enabled);
+        tiebreakPlayer1Field.setEnabled(tiebreakEnabled);
+        tiebreakPlayer2Field.setEnabled(tiebreakEnabled);
+    }
+
+    private int getEnteredCompletedSets() {
+        return parseOptionalNonNegative(player1SetsField.getText()) + parseOptionalNonNegative(player2SetsField.getText());
+    }
+
+    private int parseOptionalNonNegative(String value) {
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return Math.max(parsed, 0);
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
     }
 
     private void startMatch() {
@@ -258,6 +365,7 @@ public class TennisTrackerFrame extends JFrame {
         setup.player1Name = player1Name;
         setup.player2Name = player2Name;
         setup.startingServerIsPlayerOne = startingServerBox.getSelectedIndex() == 0;
+        setup.setsToWin = (Integer) setsToWinBox.getSelectedItem();
 
         if (useStartingScoreCheck.isSelected()) {
             try {
@@ -265,10 +373,22 @@ public class TennisTrackerFrame extends JFrame {
                 setup.player2Sets = parseNonNegative(player2SetsField.getText(), "Player 2 sets");
                 setup.player1Games = parseNonNegative(player1GamesField.getText(), "Player 1 games");
                 setup.player2Games = parseNonNegative(player2GamesField.getText(), "Player 2 games");
+                validateMatchScore(setup);
+                setup.completedSetResults = buildCompletedSetResults(setup);
+                setup.startInTiebreak = startInTiebreakCheck.isSelected();
+                if (setup.startInTiebreak && (setup.player1Games != 6 || setup.player2Games != 6)) {
+                    throw new IllegalArgumentException("A tiebreak can only start from a 6 - 6 game score.");
+                }
+                if (!setup.startInTiebreak && setup.player1Games == 6 && setup.player2Games == 6) {
+                    throw new IllegalArgumentException("Tick the tiebreak box to start from a 6 - 6 game score.");
+                }
                 setup.serverGamePoints = (Integer) serverPointsBox.getSelectedItem();
                 setup.returnerGamePoints = (Integer) returnerPointsBox.getSelectedItem();
-                setup.tiebreakPlayer1Points = parseNonNegative(tiebreakPlayer1Field.getText(), "Tiebreak Player 1");
-                setup.tiebreakPlayer2Points = parseNonNegative(tiebreakPlayer2Field.getText(), "Tiebreak Player 2");
+                if (setup.startInTiebreak) {
+                    setup.tiebreakPlayer1Points = parseNonNegative(tiebreakPlayer1Field.getText(), "Tiebreak Player 1");
+                    setup.tiebreakPlayer2Points = parseNonNegative(tiebreakPlayer2Field.getText(), "Tiebreak Player 2");
+                    validateTiebreakScore(setup);
+                }
             } catch (IllegalArgumentException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Invalid starting score",
                         JOptionPane.WARNING_MESSAGE);
@@ -295,6 +415,104 @@ public class TennisTrackerFrame extends JFrame {
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException(label + " must be a whole number.");
         }
+    }
+
+    private void validateTiebreakScore(MatchSetup setup) {
+        if ((setup.tiebreakPlayer1Points >= 7 || setup.tiebreakPlayer2Points >= 7)
+                && Math.abs(setup.tiebreakPlayer1Points - setup.tiebreakPlayer2Points) >= 2) {
+            throw new IllegalArgumentException("Tiebreak points already show a completed tiebreak.");
+        }
+    }
+
+    private void validateMatchScore(MatchSetup setup) {
+        if (setup.player1Sets >= setup.setsToWin || setup.player2Sets >= setup.setsToWin
+                || setup.player1Sets + setup.player2Sets > setup.setsToWin * 2 - 2) {
+            throw new IllegalArgumentException("Starting set score must be before match point for the selected format.");
+        }
+        if (setup.player1Games > 6 || setup.player2Games > 6) {
+            throw new IllegalArgumentException("Current set games cannot be above 6 before the next set is complete.");
+        }
+        if ((setup.player1Games == 6 || setup.player2Games == 6)
+                && Math.abs(setup.player1Games - setup.player2Games) >= 2) {
+            throw new IllegalArgumentException("Current set games already show a completed set.");
+        }
+    }
+
+    private List<String> buildCompletedSetResults(MatchSetup setup) {
+        int completedSets = setup.player1Sets + setup.player2Sets;
+        int player1CompletedSets = 0;
+        int player2CompletedSets = 0;
+        java.util.ArrayList<String> results = new java.util.ArrayList<>();
+
+        if (completedSets >= 1) {
+            int p1Games = parseNonNegative(set1Player1GamesField.getText(), "Completed set 1 Player 1 games");
+            int p2Games = parseNonNegative(set1Player2GamesField.getText(), "Completed set 1 Player 2 games");
+            validateCompletedSetGames(p1Games, p2Games, "Completed set 1");
+            if (p1Games > p2Games) {
+                player1CompletedSets++;
+            } else {
+                player2CompletedSets++;
+            }
+            results.add(formatCompletedSet(setup, p1Games, p2Games));
+        }
+
+        if (completedSets >= 2) {
+            int p1Games = parseNonNegative(set2Player1GamesField.getText(), "Completed set 2 Player 1 games");
+            int p2Games = parseNonNegative(set2Player2GamesField.getText(), "Completed set 2 Player 2 games");
+            validateCompletedSetGames(p1Games, p2Games, "Completed set 2");
+            if (p1Games > p2Games) {
+                player1CompletedSets++;
+            } else {
+                player2CompletedSets++;
+            }
+            results.add(formatCompletedSet(setup, p1Games, p2Games));
+        }
+
+        if (completedSets >= 3) {
+            int p1Games = parseNonNegative(set3Player1GamesField.getText(), "Completed set 3 Player 1 games");
+            int p2Games = parseNonNegative(set3Player2GamesField.getText(), "Completed set 3 Player 2 games");
+            validateCompletedSetGames(p1Games, p2Games, "Completed set 3");
+            if (p1Games > p2Games) {
+                player1CompletedSets++;
+            } else {
+                player2CompletedSets++;
+            }
+            results.add(formatCompletedSet(setup, p1Games, p2Games));
+        }
+
+        if (completedSets >= 4) {
+            int p1Games = parseNonNegative(set4Player1GamesField.getText(), "Completed set 4 Player 1 games");
+            int p2Games = parseNonNegative(set4Player2GamesField.getText(), "Completed set 4 Player 2 games");
+            validateCompletedSetGames(p1Games, p2Games, "Completed set 4");
+            if (p1Games > p2Games) {
+                player1CompletedSets++;
+            } else {
+                player2CompletedSets++;
+            }
+            results.add(formatCompletedSet(setup, p1Games, p2Games));
+        }
+
+        if (player1CompletedSets != setup.player1Sets || player2CompletedSets != setup.player2Sets) {
+            throw new IllegalArgumentException("Completed set game scores must match the entered set score.");
+        }
+
+        return results;
+    }
+
+    private void validateCompletedSetGames(int player1Games, int player2Games, String label) {
+        int winnerGames = Math.max(player1Games, player2Games);
+        int loserGames = Math.min(player1Games, player2Games);
+        if (player1Games == player2Games || winnerGames < 6 || winnerGames > 7 || loserGames > 6) {
+            throw new IllegalArgumentException(label + " must be a completed set score, such as 6 - 4 or 7 - 6.");
+        }
+        if (winnerGames == 6 && loserGames > 4) {
+            throw new IllegalArgumentException(label + " must be won by two games unless it is 7 - 5 or 7 - 6.");
+        }
+    }
+
+    private String formatCompletedSet(MatchSetup setup, int player1Games, int player2Games) {
+        String winnerName = player1Games > player2Games ? setup.player1Name : setup.player2Name;
+        return winnerName + " " + player1Games + "-" + player2Games;
     }
 
     private void submitRally() {
