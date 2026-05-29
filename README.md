@@ -85,29 +85,3 @@ Make sure Java is installed, then run:
 javac *.java
 java Main
 ```
-
-## Build a Shareable JAR
-
-```bash
-javac *.java
-jar cfe TennisMatchTracker.jar Main *.class
-```
-
-Then run or share:
-
-```bash
-java -jar TennisMatchTracker.jar
-```
-
-Note: anyone opening the JAR will need Java installed on their computer.
-
-## Files
-
-- `Main.java` starts the app
-- `TennisTrackerFrame.java` contains the Swing interface
-- `Match.java` contains match flow and scoring
-- `Player.java`, `Rally.java`, and `StatsCalculator.java` contain the tennis tracking logic
-
-## Publishing
-
-This project can be published on GitHub, and the compiled `TennisMatchTracker.jar` can be attached to a GitHub Release so other people can download it directly.
