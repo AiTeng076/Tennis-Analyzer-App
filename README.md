@@ -79,9 +79,13 @@ You can also type `stats` in the rally box to show stats, or `delete` to undo th
 
 ## Run Locally
 
-Make sure Java is installed, then run:
+Make sure Java is installed, then:
+
+1. Open Terminal.
+2. Go to the folder that contains the project files and open files. If the file is in Downloads and is named `TennisAnalyticsApp.jar`, run:
 
 ```bash
-javac *.java
-java Main
+cd "/Downloads/TennisAnalyticsApp.jar"
 ```
+
+If it doesn't work, make sure you have Java installed on your computer, preferably Java JDK 17. 
